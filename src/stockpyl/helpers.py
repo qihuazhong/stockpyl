@@ -575,8 +575,7 @@ def build_node_data_dict(attribute_dict, node_order_in_lists, default_values={})
 					# No, and no default value is provided; use None.
 					data_dict[n][a] = None
 		
-		elif is_iterable(attribute_dict[a]): # and a not in ('demand_list', 'probabilities'):
-
+		elif is_iterable(attribute_dict[a]) and a not in ('demand_list', 'probabilities'):
 			# attribute_dict[a] is a list; check its length.
 			if len(list(attribute_dict[a])) == len(node_order_in_lists):
 				for k in range(len(node_order_in_lists)):
@@ -919,7 +918,7 @@ def sum_of_discrete_uniforms_pmf(n, lo, hi):
 	du_pmf = {i: 1/(hi-lo+1) for i in range(lo, hi+1)}
 	du_sum_pmf = {0: 1}
 
-	for i in range(n):
+	for i in range(int(n)):
 		new_sum_pmf = defaultdict(float)
 		for prev_sum, dice in product(du_sum_pmf, du_pmf):
 			new_sum_pmf[prev_sum + dice] += du_sum_pmf[prev_sum] * du_pmf[dice]
