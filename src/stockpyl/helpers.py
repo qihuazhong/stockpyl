@@ -166,7 +166,7 @@ def is_integer(x):
 
 	"""
 	# Check whether x is an int.
-	if isinstance(x, int, np.int32, np.int64):
+	if isinstance(x, (int, np.int32, np.int64)):
 		return True
 	# Check whether x is a float.
 	elif isinstance(x, float):
