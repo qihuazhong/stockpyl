@@ -341,7 +341,7 @@ class SupplyChainNetwork(object):
 			
 	# Methods for node handling.
 
-	def get_node_from_index(self, index):
+	def get_node_from_index(self, index: int):
 		"""Return node object with the specified index, or ``None`` if no
 		matching node is found.
 
