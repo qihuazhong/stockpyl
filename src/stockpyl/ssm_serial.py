@@ -41,6 +41,7 @@ API Reference
 -------------
 
 """
+from typing import Optional, Tuple, Any
 
 import numpy as np
 from scipy import stats
@@ -66,7 +67,7 @@ def optimize_base_stock_levels(
     stockout_cost=None,
     demand_mean=None,
     demand_standard_deviation=None,
-    demand_source= None,
+    demand_source: Optional[DemandSource] = None,
     network=None,
     S=None,
     plots=False,
@@ -77,6 +78,7 @@ def optimize_base_stock_levels(
     ltd_upper_tail_prob=1 - stats.norm.cdf(4),
     sum_ltd_lower_tail_prob=1 - stats.norm.cdf(4),
     sum_ltd_upper_tail_prob=1 - stats.norm.cdf(8),
+    in_transit_holding_cost: bool = True,
 ):
     """Chen-Zheng (1994) algorithm for stochastic serial systems under the stochastic service model (SSM), which in 
 	turn is based on Clark and Scarf (1960). 
@@ -175,6 +177,8 @@ def optimize_base_stock_levels(
 	sum_ltd_upper_tail_prob : float, optional
 		Upper tail probability to use when truncating "sum-of-lead-times"
 		demand distribution.
+    in_transit_holding_cost : bool, default True
+    Whether the reported optimal cost include in-transit inventory holding cost
 
 	Returns
 	-------
@@ -287,6 +291,7 @@ def optimize_base_stock_levels(
     mu = demand_source.demand_distribution.mean()
     L = [0] + [lead_time_dict[j] for j in range(1, N + 1)]
     h = [0] + [echelon_holding_cost_dict[j] for j in range(1, N + 1)]
+    h_prime = [0] + [sum(h[i:]) for i in range(1, N + 1)]  # local holding cost
     p = stockout_cost
 
     # Build "sum of lead-time demand" distribution (LTD distribution in
@@ -364,6 +369,9 @@ def optimize_base_stock_levels(
     # Calculate C_bar[0, :].
     C_bar[0, :] = (p + sum(h)) * np.maximum(-x, 0)
 
+    # cost offset
+    C_offset = np.zeros((N + 1,))
+
     # Loop through stages.
     for j in range(1, N + 1):
 
@@ -438,6 +446,9 @@ def optimize_base_stock_levels(
             # Calculate expected cost.
             C[j, the_x] = np.dot(fd, the_cost)
 
+        if j > 1:
+            C_offset[j] = np.dot(fd, d) * h_prime[j]
+
         # Did user specify S?
         if S is None:
             # No -- determine S*.
@@ -475,7 +486,11 @@ def optimize_base_stock_levels(
     # Revert to original node indexing.
     temp_S_star = {n_ind: S_star[old_to_new_dict[n_ind]] for n_ind in old_to_new_dict.keys()}
     S_star = temp_S_star
-    return S_star, C_star[N]
+
+    if in_transit_holding_cost:
+        return S_star, C_star[N], C_star[N]
+    else:
+        return S_star, C_star[N], C_star[N] - C_offset.sum()
 
 
 def newsvendor_heuristic(
@@ -938,7 +953,7 @@ def _preprocess_parameters(
     demand_standard_deviation=None,
     demand_source=None,
     network=None,
-):
+) -> Tuple[dict, Any | int, dict, dict, Any, DemandSource]:
     """Check that appropriate parameters are provided, validate their values, convert to N, ..., 1
     indexing, and return dict-ified parameters.
 
