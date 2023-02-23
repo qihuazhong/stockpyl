@@ -488,9 +488,9 @@ def optimize_base_stock_levels(
     S_star = temp_S_star
 
     if in_transit_holding_cost:
-        return S_star, C_star[N], C_star[N]
+        return S_star, C_star[N]
     else:
-        return S_star, C_star[N], C_star[N] - C_offset.sum()
+        return S_star, C_star[N] - C_offset.sum()
 
 
 def newsvendor_heuristic(

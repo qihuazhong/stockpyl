@@ -166,7 +166,7 @@ def is_integer(x):
 
 	"""
 	# Check whether x is an int.
-	if isinstance(x, int):
+	if isinstance(x, int, np.int32, np.int64):
 		return True
 	# Check whether x is a float.
 	elif isinstance(x, float):
@@ -1012,7 +1012,7 @@ def sum_of_discretes_distribution(n, lo, hi, p):
 			is not consecutive integers, you must add zeroes to p for the integers that are not part of the support)")
 
 	xk = np.arange(n * lo, n * hi + 1)
-	pk = convolve_many([p for _ in range(n)])
+	pk = convolve_many([p for _ in range(int(n))])
 
 	distribution = stats.rv_discrete(name='sum_of_discretes', values=(xk, pk))
 
